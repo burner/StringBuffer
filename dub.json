@@ -1,0 +1,9 @@
+{
+	"name": "stringbuffer",
+	"authors": [
+		"burner"
+	],
+	"description": "A stack based string buffer that grows into the heap if needed.",
+	"copyright": "Copyright © 2017, burner",
+	"license": "LGPL3"
+}
