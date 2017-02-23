@@ -1,6 +1,8 @@
 StringBuffer
 ============
 
+![alt text](https://travis-ci.org/burner/fastjwt.svg?branch=master)
+
 A simple stack based StringBuffer that overflows into the heap and releases
 all used memory on destruction.
 
