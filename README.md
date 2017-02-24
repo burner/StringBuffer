@@ -1,7 +1,7 @@
 StringBuffer
 ============
 
-![alt text](https://travis-ci.org/burner/stringbuffer.svg?branch=master)
+![alt text](https://travis-ci.org/burner/StringBuffer.svg?branch=master)
 
 A simple stack based StringBuffer that overflows into the heap and releases
 all used memory on destruction.
