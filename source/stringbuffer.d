@@ -9,7 +9,7 @@ getData can no longer be used.
 struct StringBufferImpl(int stackLen) {
 	import core.memory : GC;
 	char[stackLen] stack;
-	char* overflow;
+	char* overflow = null;
 	size_t capacity = stackLen;
 	size_t length;
 	bool copied;
@@ -21,7 +21,7 @@ struct StringBufferImpl(int stackLen) {
 	}
 
 	struct OutputRange {
-		StringBuffer* buf;
+		StringBufferImpl!(stackLen)* buf;
 
 		void put(const(char) c) @safe {
 			this.buf.insertBack(c);
@@ -59,6 +59,10 @@ struct StringBufferImpl(int stackLen) {
 	private void grow() @trusted {
 		this.capacity *= 2;
 		this.overflow = cast(char*)GC.realloc(this.overflow, this.capacity);
+		this.copy();
+	}
+
+	private void copy() @trusted {
 		if(!this.copied) {
 			for(size_t i = 0; i < stackLen; ++i) {
 				this.overflow[i] = this.stack[i];
@@ -90,6 +94,7 @@ struct StringBufferImpl(int stackLen) {
 				this.grow();
 				assert(this.overflow !is null);
 			}
+			this.copy();
 			for(size_t i = 0; i < s.length; ++i) {
 				this.overflow[this.length++] = s[i];
 			}
@@ -98,6 +103,11 @@ struct StringBufferImpl(int stackLen) {
 
 	void insertBack(string s) @safe {
 		this.insertBack(cast(const(char)[])s);
+	}
+
+	void removeAll() @safe {
+		this.length = 0;
+		this.copied = false;
 	}
 
 	T getData(T = string)() @system {
@@ -196,4 +206,29 @@ unittest {
 	for(int i = 0; i < ls.length; ++i) {
 		assert(ls[i] == ('0' + (i % 10)));
 	}
+}
+
+unittest {
+	alias SmallStringBuf = StringBufferImpl!10;
+
+	SmallStringBuf buf;
+	assert(buf.overflow is null);
+	buf.insertBack("0123456789");
+	buf.insertBack("0123456789");
+	assert(buf.overflow !is null);
+	buf.removeAll();
+	assert(buf.overflow !is null);
+	assert(buf.length == 0);
+	assert(buf.copied == false);
+
+	buf.insertBack("543210");
+	assert(buf.length == 6);
+	assert(buf.overflow !is null);
+	assert(buf.overflow[0 .. 20] == "01234567890123456789");
+	buf.insertBack("98765432109876543210");
+
+	assert(buf.overflow !is null);
+	assert(buf.length == 26);
+	assert(buf.copied == true);
+	assert(buf.getData() == "54321098765432109876543210", buf.getData());
 }
