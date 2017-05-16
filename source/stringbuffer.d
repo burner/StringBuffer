@@ -123,18 +123,27 @@ struct StringBufferImpl(int stackLen) {
 alias StringBuffer = StringBufferImpl!512;
 
 unittest {
-	StringBuffer buf;
-	buf.insertBack('c');
-	buf.insertBack("c");
+	import std.meta : AliasSeq;
 
-	assert(buf.getData() == "cc");
+	void localTest(int Size)() {
+		alias SmallStringBuf = StringBufferImpl!10;
+		SmallStringBuf buf;
+		buf.insertBack('c');
+		buf.insertBack("c");
 
-	for(int i = 0; i < 2048; ++i) {
-		buf.insertBack(cast(dchar)'c');
+		assert(buf.getData() == "cc");
+
+		for(int i = 0; i < 2048; ++i) {
+			buf.insertBack(cast(dchar)'c');
+		}
+
+		for(int i = 0; i < 2050; ++i) {
+			assert(buf.getData()[i] == 'c');
+		}
 	}
 
-	for(int i = 0; i < 2050; ++i) {
-		assert(buf.getData()[i] == 'c');
+	foreach(s; AliasSeq!(1,2,3,7,8,9,10,11,127,255,256,500,512)) {
+		localTest!(s)();
 	}
 }
 
@@ -209,26 +218,34 @@ unittest {
 }
 
 unittest {
-	alias SmallStringBuf = StringBufferImpl!10;
+	import std.meta : AliasSeq;
 
-	SmallStringBuf buf;
-	assert(buf.overflow is null);
-	buf.insertBack("0123456789");
-	buf.insertBack("0123456789");
-	assert(buf.overflow !is null);
-	buf.removeAll();
-	assert(buf.overflow !is null);
-	assert(buf.length == 0);
-	assert(buf.copied == false);
+	void localTest(int Size)() {
+		alias SmallStringBuf = StringBufferImpl!10;
 
-	buf.insertBack("543210");
-	assert(buf.length == 6);
-	assert(buf.overflow !is null);
-	assert(buf.overflow[0 .. 20] == "01234567890123456789");
-	buf.insertBack("98765432109876543210");
+		SmallStringBuf buf;
+		assert(buf.overflow is null);
+		buf.insertBack("0123456789");
+		buf.insertBack("0123456789");
+		assert(buf.overflow !is null);
+		buf.removeAll();
+		assert(buf.overflow !is null);
+		assert(buf.length == 0);
+		assert(buf.copied == false);
 
-	assert(buf.overflow !is null);
-	assert(buf.length == 26);
-	assert(buf.copied == true);
-	assert(buf.getData() == "54321098765432109876543210", buf.getData());
+		buf.insertBack("543210");
+		assert(buf.length == 6);
+		assert(buf.overflow !is null);
+		assert(buf.overflow[0 .. 20] == "01234567890123456789");
+		buf.insertBack("98765432109876543210");
+
+		assert(buf.overflow !is null);
+		assert(buf.length == 26);
+		assert(buf.copied == true);
+		assert(buf.getData() == "54321098765432109876543210", buf.getData());
+	}
+
+	foreach(s; AliasSeq!(1,2,3,4,5,6,7,8,9,10,11,12)) {
+		localTest!(s)();
+	}
 }
