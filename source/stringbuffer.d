@@ -14,9 +14,11 @@ struct StringBufferImpl(int stackLen) {
 	size_t length;
 	bool copied;
 
-	~this() {
+	~this() @safe {
 		if(this.overflow !is null) {
-			GC.free(cast(void*)this.overflow);
+			() @trusted { 
+				GC.free(cast(void*)this.overflow); 
+			}();
 		}
 	}
 
